@@ -1,0 +1,14 @@
+{
+    "name": "gopherjqm-router",
+    "version": "0.0.1",
+    "description": "GopherJQM Router",
+    "author": "Jonathan Hall <flimzy@flimzy.com",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/flimzy/gopherjqm-router"
+    },
+    "dependencies": {
+        "jquery": ">=2.1",
+        "jsdom": ">=3.1.2"
+    }
+}
