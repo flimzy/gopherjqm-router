@@ -3,6 +3,8 @@
 package router
 
 import (
+	"sync"
+	"log"
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -13,12 +15,20 @@ import (
 // so that init() in other files will be run later
 var _ = initjQuery()
 func initjQuery() bool {
-	cwd := js.Global.Get("process").Call("cwd").String()
-	jsdom := js.Global.Call("require", cwd+"/node_modules/jsdom")
-	doc := jsdom.Call("jsdom", "<html></html>")
-	js.Global.Set("window", doc.Get("defaultView"))
-	jQuery := js.Global.Call("require", cwd+"/node_modules/jquery")
-	js.Global.Set("jQuery", jQuery)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	fs := js.Global.Call("require", "fs")
+	fs.Call("readFile", "test/index.html", func(_ *js.Object, data *js.Object) {
+		defer wg.Done()
+		jsdom := js.Global.Call("require", "jsdom")
+		doc := jsdom.Call("jsdom", data)
+		js.Global.Set("window", doc.Get("defaultView"))
+		jQuery := js.Global.Call("require", "jquery")
+		js.Global.Set("jQuery", jQuery)
+	})
+	log.Print("Waiting")
+	wg.Wait()
+	log.Print("Done waiting")
 	return true
 }
 
@@ -27,4 +37,6 @@ func TestFoo(t *testing.T) {
 	Convey("Given some integer with a starting value", t, func() {
 		So( js.Global.Get("window"), ShouldNotBeNil )
 	})
+	// Close the window and terminate the program
+	js.Global.Get("window").Call("close")
 }
