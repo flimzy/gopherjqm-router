@@ -5,6 +5,7 @@ package router
 import (
 // 	"errors"
 
+	"github.com/armon/go-radix"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
 )
@@ -15,7 +16,7 @@ type Handler func(*js.Object, *jquery.Event, *js.Object, Params) bool
 
 type Router struct {
 	element *jquery.JQuery
-	trees   map[string]*node
+	trees   map[string]*radix.Tree
 }
 
 // Param is a single URL parameter, consisting of a key and a value.
@@ -40,19 +41,19 @@ func New(elem *jquery.JQuery) *Router {
 
 func (r *Router) Handle(path, event string, handler Handler) error {
 	if r.trees == nil {
-		r.trees = make(map[string]*node)
+		r.trees = make(map[string]*radix.Tree)
 	}
 
 	root := r.trees[event]
 	if root == nil {
-		root = new(node)
+		root = radix.New()
 		r.trees[event] = root
 		r.element.On("pagecontainer" + event, func(e *jquery.Event, ui *js.Object) bool {
 			return r.handleRequest(event, e, ui)
 		})
 	}
 
-	root.addRoute(path, handler)
+	root.Insert(path, handler)
 	return nil
 }
 
